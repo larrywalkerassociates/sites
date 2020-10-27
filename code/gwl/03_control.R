@@ -25,7 +25,7 @@ m <- as(m, "Spatial")
 # write dashboards
 write_dashboard <- function(x) {
   rmarkdown::render(input       = here("02_index.Rmd"), 
-                    output_file = sprintf("/Users/richpauloo/Documents/GitHub/lwa_gh/data/%s/index.html", x),
+                    output_file = sprintf("/Users/richpauloo/Documents/GitHub/sites/data/%s/index.html", x),
                     params      = list(AOI = x)
   )
 }

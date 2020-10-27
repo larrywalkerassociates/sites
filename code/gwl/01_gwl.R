@@ -144,13 +144,13 @@ for(i in 1:length(n)){
   as(maoi, "Spatial") %>% 
     .@data %>% 
     filter(SITE_CODE == n[i]) %>% 
-    write_csv(paste0("/Users/richpauloo/Documents/GitHub/lwa_gh/data/", aoi_out_path, "/", n[i], ".csv"))
+    write_csv(paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path, "/", n[i], ".csv"))
 }
 
 write_csv(as(maoi, "Spatial")@data, 
-          paste0("/Users/richpauloo/Documents/GitHub/lwa_gh/data/", aoi_out_path, "/all_gwl_data.csv"))
+          paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path, "/all_gwl_data.csv"))
 
-zip_dir    <- paste0("/Users/richpauloo/Documents/GitHub/lwa_gh/data/", aoi_out_path, "/", aoi_out_path,"_data.zip")
-file_paths <- list.files(paste0("/Users/richpauloo/Documents/GitHub/lwa_gh/data/", aoi_out_path),  full.names = TRUE)
+zip_dir    <- paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path, "/", aoi_out_path,"_data.zip")
+file_paths <- list.files(paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path),  full.names = TRUE)
 zip(zip_dir, file_paths, extras = "-j")
 file.remove(file_paths)
