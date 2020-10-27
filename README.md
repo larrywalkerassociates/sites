@@ -1,6 +1,6 @@
 # LWA static sites
 
-This is the Github repo for various open static sites created by [Larry Walker Associates](lwa.com).  
+This is the Github repo for various open static sites created by [Larry Walker Associates](https://www.lwa.com).  
 
 ## Static site engine and template
 
