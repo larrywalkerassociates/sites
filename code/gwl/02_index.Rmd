@@ -31,7 +31,7 @@ library(htmlwidgets)
 library(leafem)
 library(here)
 
-zipfile <- paste0("https://larrywalkerassociates.github.io/raw/master/data/", params$AOI, "/", params$AOI,"_data.zip")
+zipfile <- paste0("https://github.com/larrywalkerassociates/sites/raw/main/data/", params$AOI, "/", params$AOI,"_data.zip")
 ```
 
 Column Column {.tabset}
