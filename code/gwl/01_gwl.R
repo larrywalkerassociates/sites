@@ -60,6 +60,8 @@ mapview::mapview(maoi, zcol = "WELL_DEPTH") +
 sc <- unique(maoi$SITE_CODE) %>% sort() 
 ns <- group_by(maoi, SITE_CODE) %>% slice(1) %>% arrange(SITE_CODE)
 ns$lab <- paste0("<p><b>state well num:</b> ", ns$SWN, "</p>",
+                 "<p><b>coords x:</b> ", as_tibble(st_coordinates(ns))$X, "</p>",
+                 "<p><b>coords y:</b> ", as_tibble(st_coordinates(ns))$Y, "</p>",
                  "<p><b>n samp:</b> ", ns$n_samples, "</p>",
                  "<p><b>t range:</b> ", ns$t_range, "</p>",
                  "<p><b>depth (ft):</b> ", ns$WELL_DEPTH, "</p>",
@@ -139,15 +141,18 @@ dt <- ns %>%
 # subset to the site codes
 n <- unique(maoi$SITE_CODE)
 
-# write csvs
+# write csvs - first arrange data and add geometry
+df <- as(maoi, "Spatial")@data %>% 
+  select(-c("STN_ID.x", "STN_ID.y")) %>% 
+  bind_cols(as_tibble(st_coordinates(maoi)))
+
 for(i in 1:length(n)){
-  as(maoi, "Spatial") %>% 
-    .@data %>% 
+  df %>% 
     filter(SITE_CODE == n[i]) %>% 
     write_csv(paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path, "/", n[i], ".csv"))
 }
 
-write_csv(as(maoi, "Spatial")@data, 
+write_csv(df, 
           paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path, "/all_gwl_data.csv"))
 
 zip_dir    <- paste0("/Users/richpauloo/Documents/GitHub/sites/data/", aoi_out_path, "/", aoi_out_path,"_data.zip")
