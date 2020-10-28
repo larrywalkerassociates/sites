@@ -4,7 +4,7 @@ output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
-    source_code: "https://github.com/larrywalkerassociates/sites/code/gwl"
+    source_code: "https://github.com/larrywalkerassociates/sites/tree/main/code/gwl"
 params: 
   AOI: "000"
 ---
