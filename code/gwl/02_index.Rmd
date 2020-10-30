@@ -16,6 +16,7 @@ params:
   .custom-icon:hover {
     fill: #DA4567;
   }
+  div.leaflet-popup-content {width:auto !important;}
 </style>
 
 ```{r setup, include=FALSE}
