@@ -97,8 +97,8 @@ maoi <- maoi %>%
            factor(water_year_type,
                   levels = c("W","AN","BN","D","C"), 
                   labels = c("Wet","Above Normal","Below Normal","Dry","Critical")),
-         water_year_start = ymd_hms(paste0(water_year, "-10-01 00:00:00")), 
-         water_year_end   = ymd_hms(paste0((water_year + 1), "-09-30 24:00:00")))
+         water_year_start = ymd_hms(paste0(water_year-1, "-10-01 00:00:00")), 
+         water_year_end   = ymd_hms(paste0((water_year), "-09-30 24:00:00")))
 
 # ------------------------------------------------------------------------
 # build plotly objects
@@ -119,7 +119,7 @@ for(i in seq_along(p)){
               max(d$water_year_end, na.rm = TRUE))
   wy_rect <- tibble(t0 = seq(wy_rng[1], wy_rng[2], "1 year"),
                     t1 = seq(wy_rng[3], wy_rng[4], "1 year")) %>% 
-    mutate(water_year = year(t0)) %>% 
+    mutate(water_year = year(t1)) %>% 
     left_join(wyt, by = c("water_year" = "WY")) %>% 
     mutate(water_year_type = 
              factor(water_year_type,

@@ -14,7 +14,7 @@ library(lubridate)
 calculate_water_year <- function(date){
   yr = lubridate::year(date)
   mh = lubridate::month(date)
-  yr = ifelse(mh %in% 1:9, yr - 1, yr)
+  yr = ifelse(mh %in% 1:9, yr, yr + 1)
   return(yr)
 }
 
