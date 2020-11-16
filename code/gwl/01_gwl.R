@@ -93,7 +93,6 @@ maoi <- maoi %>%
   ungroup() %>% 
   mutate(water_year = calculate_water_year(MSMT_DATE)) %>% 
   left_join(wyt, by = c("water_year" = "WY")) %>% 
-  rename(water_year_type = `Yr-type`) %>% 
   mutate(water_year_type = 
            factor(water_year_type,
                   levels = c("W","AN","BN","D","C"), 
@@ -108,7 +107,7 @@ for(i in seq_along(p)){
   d <- maoi %>% 
     filter(SITE_CODE == sc[i])
   
-  # closest to 2015-01-01
+  # closest to 2015-01-01 
   close_2015 <- 
     tibble(MSMT_DATE = d[which.min(abs(d$MSMT_DATE - ymd_hms("2015-01-01 00:00:00"))), ]$MSMT_DATE,
            close_Jan_2015 = d[which.min(abs(d$MSMT_DATE - ymd_hms("2015-01-01 00:00:00"))), ]$GSE_WSE)
@@ -122,7 +121,6 @@ for(i in seq_along(p)){
                     t1 = seq(wy_rng[3], wy_rng[4], "1 year")) %>% 
     mutate(water_year = year(t0)) %>% 
     left_join(wyt, by = c("water_year" = "WY")) %>% 
-    rename(water_year_type = `Yr-type`) %>% 
     mutate(water_year_type = 
              factor(water_year_type,
                     levels = c("W","AN","BN","D","C"), 

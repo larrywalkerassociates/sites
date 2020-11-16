@@ -31,9 +31,6 @@ m <- left_join(m, perf, by = "SITE_CODE") %>%
 m <- st_as_sf(m, coords = c("LONGITUDE","LATITUDE"), crs = 4269)
 m <- as(m, "Spatial")
 
-# water year type data
-wyt <- read_csv(here("in", "sac_water_year_types.csv"))
-
 # write dashboards
 write_dashboard <- function(x) {
   rmarkdown::render(input       = here("02_index.Rmd"), 
@@ -46,7 +43,24 @@ write_dashboard <- function(x) {
 aois <- paste0(c("sasb", "shasta", "ukiah"), "_gwl")
 
 for(j in seq_along(aois)){
+  
   aoi_out_path <- aois[j]
+  
+  # water year type data
+  if(aois[j] == "ukiah_gwl") wyt <- read_csv(here("in", "ukiah_water_year_types.csv")) %>% 
+      mutate(water_year_type = case_when(
+        water_year_type == "Wet" ~ "W",
+        water_year_type == "Above normal" ~ "AN",
+        water_year_type == "Below normal" ~ "BN",
+        water_year_type == "Dry" ~ "D",
+        water_year_type == "Critical" ~ "C"))
+  if(aois[j] %in% c("sasb_gwl", "shasta_gwl")) wyt <- read_csv(here("in", "sac_water_year_types.csv"))
+  
   source(here("01_gwl.R"))
+  
   write_dashboard(aois[j])
 }
+
+
+
+
