@@ -7,6 +7,7 @@
 if(aoi_out_path == "sasb_gwl")   {aoi_shp <- "shp_sas/SAS Subbasin_B118.shp"}
 if(aoi_out_path == "ukiah_gwl")  {aoi_shp <- "shp_ukiah/GSA_limit.shp"}
 if(aoi_out_path == "shasta_gwl") {aoi_shp <- "shp_shasta/Shasta_GWBasin_New.shp"}
+if(aoi_out_path == "butte_gwl")  {aoi_shp <- "shp_butte/Butte Valley Basin Boundary.shp"}
 aoi <- st_read(here("in", aoi_shp)) %>% 
   st_transform(crs = 4269) %>% 
   as("Spatial")

@@ -40,7 +40,7 @@ write_dashboard <- function(x) {
 }
 
 # three aois to write
-aois <- paste0(c("sasb", "shasta", "ukiah"), "_gwl")
+aois <- paste0(c("sasb", "shasta", "ukiah", "butte"), "_gwl")
 
 for(j in seq_along(aois)){
   
@@ -54,7 +54,7 @@ for(j in seq_along(aois)){
         water_year_type == "Below normal" ~ "BN",
         water_year_type == "Dry" ~ "D",
         water_year_type == "Critical" ~ "C"))
-  if(aois[j] %in% c("sasb_gwl", "shasta_gwl")) wyt <- read_csv(here("in", "sac_water_year_types.csv"))
+  if(aois[j] %in% c("sasb_gwl", "shasta_gwl", "butte_gwl")) wyt <- read_csv(here("in", "sac_water_year_types.csv"))
   
   source(here("01_gwl.R"))
   
