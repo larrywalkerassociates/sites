@@ -62,7 +62,15 @@ for(j in seq_along(aois)){
         WYT == "Below Normal" ~ "BN",
         WYT == "Dry" ~ "D",
         WYT == "Critical" ~ "C"))
-  if(aois[j] %in% c("sasb_gwl", "shasta_gwl")) wyt <- read_csv(here("in", "sac_water_year_types.csv"))
+  if(aois[j] == "shasta_gwl") wyt <- read_csv(here("in", "sgma_wyt_dataset.csv")) %>% 
+      filter(HUC8 == 18010207) %>% 
+      mutate(water_year_type = case_when(
+        WYT == "Wet" ~ "W",
+        WYT == "Above Normal" ~ "AN",
+        WYT == "Below Normal" ~ "BN",
+        WYT == "Dry" ~ "D",
+        WYT == "Critical" ~ "C"))
+  if(aois[j] == "sasb_gwl") wyt <- read_csv(here("in", "sac_water_year_types.csv"))
   
   source(here("01_gwl.R"))
   
