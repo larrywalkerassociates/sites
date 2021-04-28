@@ -8,6 +8,7 @@ if(aoi_out_path == "sasb_gwl")   {aoi_shp <- "shp_sas/SAS Subbasin_B118.shp"}
 if(aoi_out_path == "ukiah_gwl")  {aoi_shp <- "shp_ukiah/GSA_limit.shp"}
 if(aoi_out_path == "shasta_gwl") {aoi_shp <- "shp_shasta/Shasta_GWBasin_New.shp"}
 if(aoi_out_path == "butte_gwl")  {aoi_shp <- "shp_butte/Butte Valley Basin Boundary.shp"}
+if(aoi_out_path == "sierra_gwl") {aoi_shp <- "shp_sierra/Sierra_Valley_Groundwater_Basin.shp"}
 aoi <- st_read(here("in", aoi_shp)) %>% 
   st_transform(crs = 4269) %>% 
   as("Spatial")
@@ -51,6 +52,10 @@ if(aoi_shp == "shp_sas/SAS Subbasin_B118.shp"){
 
 if(aoi_shp == "shp_ukiah/GSA_limit.shp"){
   maoi <- maoi %>% filter(WSE > 300)
+}
+
+if(aoi_shp == "shp_sierra/Sierra_Valley_Groundwater_Basin.shp"){
+  maoi <- maoi %>% filter(GSE_WSE < 200)
 }
 
 # sanity check: water levels

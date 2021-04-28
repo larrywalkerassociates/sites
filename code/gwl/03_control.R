@@ -40,7 +40,8 @@ write_dashboard <- function(x) {
 }
 
 # three aois to write
-aois <- paste0(c("sasb", "shasta", "ukiah", "butte"), "_gwl")
+# aois <- paste0(c("sasb", "shasta", "ukiah", "butte"), "_gwl")
+aois <- paste0(c("sierra"), "_gwl")
 
 for(j in seq_along(aois)){
   
@@ -48,29 +49,45 @@ for(j in seq_along(aois)){
   
   # water year type data
   if(aois[j] == "ukiah_gwl") wyt <- read_csv(here("in", "ukiah_water_year_types.csv")) %>% 
-      mutate(water_year_type = case_when(
-        water_year_type == "Wet" ~ "W",
-        water_year_type == "Above normal" ~ "AN",
-        water_year_type == "Below normal" ~ "BN",
-        water_year_type == "Dry" ~ "D",
-        water_year_type == "Critical" ~ "C"))
+      mutate(
+        water_year_type = case_when(
+          water_year_type == "Wet" ~ "W",
+          water_year_type == "Above normal" ~ "AN",
+          water_year_type == "Below normal" ~ "BN",
+          water_year_type == "Dry" ~ "D",
+          water_year_type == "Critical" ~ "C")
+      )
   if(aois[j] == "butte_gwl") wyt <- read_csv(here("in", "sgma_wyt_dataset.csv")) %>% 
       filter(HUC8 == 18010205) %>% 
-      mutate(water_year_type = case_when(
-        WYT == "Wet" ~ "W",
-        WYT == "Above Normal" ~ "AN",
-        WYT == "Below Normal" ~ "BN",
-        WYT == "Dry" ~ "D",
-        WYT == "Critical" ~ "C"))
+      mutate(
+        water_year_type = case_when(
+          WYT == "Wet" ~ "W",
+          WYT == "Above Normal" ~ "AN",
+          WYT == "Below Normal" ~ "BN",
+          WYT == "Dry" ~ "D",
+          WYT == "Critical" ~ "C")
+      )
   if(aois[j] == "shasta_gwl") wyt <- read_csv(here("in", "sgma_wyt_dataset.csv")) %>% 
       filter(HUC8 == 18010207) %>% 
-      mutate(water_year_type = case_when(
-        WYT == "Wet" ~ "W",
-        WYT == "Above Normal" ~ "AN",
-        WYT == "Below Normal" ~ "BN",
-        WYT == "Dry" ~ "D",
-        WYT == "Critical" ~ "C"))
+      mutate(
+        water_year_type = case_when(
+          WYT == "Wet" ~ "W",
+          WYT == "Above Normal" ~ "AN",
+          WYT == "Below Normal" ~ "BN",
+          WYT == "Dry" ~ "D",
+          WYT == "Critical" ~ "C")
+      )
   if(aois[j] == "sasb_gwl") wyt <- read_csv(here("in", "sac_water_year_types.csv"))
+  if(aois[j] == "sierra_gwl") wyt <- read_delim(here("in", "wyt_gus.txt"), "\t") %>% 
+      mutate(
+        water_year_type = case_when(
+          Type == "Wet" ~ "W",
+          Type == "Above Normal" ~ "AN",
+          Type == "Below Normal" ~ "BN",
+          Type == "Dry" ~ "D",
+          Type == "Critical" ~ "C")
+        ) %>% 
+      select(WY = WY_Start, water_year_type)
   
   source(here("01_gwl.R"))
   
