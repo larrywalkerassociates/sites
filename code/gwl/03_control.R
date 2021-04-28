@@ -40,8 +40,7 @@ write_dashboard <- function(x) {
 }
 
 # three aois to write
-# aois <- paste0(c("sasb", "shasta", "ukiah", "butte"), "_gwl")
-aois <- paste0(c("sierra"), "_gwl")
+aois <- paste0(c("sasb", "shasta", "ukiah", "butte", "sierra"), "_gwl")
 
 for(j in seq_along(aois)){
   
