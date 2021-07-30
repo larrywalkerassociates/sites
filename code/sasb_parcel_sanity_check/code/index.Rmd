@@ -1,0 +1,46 @@
+---
+title: "Ag-Res parcels in the SASb"
+author: Prepared by Rich Pauloo (richp@lwa.com)
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, 
+                      message = FALSE, out.width = "100%")
+```
+
+
+```{r, results=FALSE}
+library(tidyverse)
+library(sf)
+library(here)
+library(mapview)
+
+# ag res parcel centroids
+arpc <- read_rds(here("results", "ag_res_parcel_centroids.rds"))
+
+# south american subbasin
+sasb <- st_read(here("data","sasb","SAS Subbasin_B118.shp")) %>% 
+  st_transform(2226)
+
+# zoning non-simplified
+z <- st_read(here("data", "Zoning-shp", "Zoning.shp"))
+```
+
+At the time of writing (`r Sys.Date()`), there are `r nrow(arpc)` parcels in the Sac County parcel centroid database[^1] that fall within "AGRICULTURAL-RESIDENTIAL" zones[^2] and the South American Subbasin GSP Plan area.
+
+[^1]: [Parcel centroid data](https://data.saccounty.net/datasets/7da6753c252b42af9f85751dc5b27bbb_0/explore?location=38.378241%2C-121.437720%2C10.54)
+[^2]: [Zoning data](https://data.saccounty.net/datasets/c93dfff02b3241f6aea0783a4ad2ee46_0/explore?location=38.375707%2C-121.439956%2C10.45&showTable=true)
+
+
+```{r}
+# map
+sasbl <- st_cast(sasb, "LINESTRING")
+mapview(sasbl, lwd = 2, col.regions = "red", 
+        color = "red", alpha.regions = 0, 
+        layer.name = "SASb") + 
+  mapview(z, layer.name = "Zone") + 
+  mapview(arpc, color = "green", col.regions = "green", 
+          layer.name = "Ag-Res parcel centroids")
+```
+
