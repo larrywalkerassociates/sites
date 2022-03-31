@@ -5,10 +5,7 @@ aoi_out_path <- "sasb_gwl"
 
 # spatial data for AOI: SASb, Ukiah, Shasta
 if(aoi_out_path == "sasb_gwl")   {aoi_shp <- "shp_sas/SAS Subbasin_B118.shp"}
-if(aoi_out_path == "ukiah_gwl")  {aoi_shp <- "shp_ukiah/GSA_limit.shp"}
-if(aoi_out_path == "shasta_gwl") {aoi_shp <- "shp_shasta/Shasta_GWBasin_New.shp"}
-if(aoi_out_path == "butte_gwl")  {aoi_shp <- "shp_butte/Butte Valley Basin Boundary.shp"}
-if(aoi_out_path == "sierra_gwl") {aoi_shp <- "shp_sierra/Sierra_Valley_Groundwater_Basin.shp"}
+
 aoi <- st_read(here("in", aoi_shp)) %>% 
   st_transform(crs = 4269) %>% 
   as("Spatial")
@@ -39,65 +36,58 @@ maoi <- m[aoi, ] %>% st_as_sf()
 
 # add observation count and time range. site code has no NA vals
 maoi <- maoi %>% 
-  group_by(SITE_CODE) %>% 
-  mutate(t_range   = paste(range(MSMT_DATE), collapse = " - "),
+  group_by(well_id) %>% 
+  mutate(t_range   = paste(range(date), collapse = " - "),
          n_samples = n()) %>% 
   ungroup()
 
-# WSE and DBGS in units FEET
+# gwe and DBGS in units FEET
 # omit erroneous value
-if(aoi_shp == "shp_sas/SAS Subbasin_B118.shp"){
-  maoi <- maoi %>% filter(WSE > -200)
-}
+# if(aoi_shp == "shp_sas/SAS Subbasin_B118.shp"){
+#   maoi <- maoi %>% filter(gwe > -200)}
 
-if(aoi_shp == "shp_ukiah/GSA_limit.shp"){
-  maoi <- maoi %>% filter(WSE > 300)
-}
-
-if(aoi_shp == "shp_sierra/Sierra_Valley_Groundwater_Basin.shp"){
-  maoi <- maoi %>% filter(GSE_WSE < 200)
-}
+# No crosswalk between well_id or SWN and WCRNumber -> I think this obscures use
+# periodic database works with well_id, date and gwe, SWN
+# includes X, Y, well_depth, TOP_RF, BOT_PRF, WELL_USE, WELL_TYPE, WLM_ORG_NAME
+# as pop ups in map (color for dtw)
 
 # sanity check: water levels
-#ggplot(maoi, aes(MSMT_DATE, WSE, color = SWN)) + geom_line() + guides(color = FALSE)
-#ggplot(maoi, aes(MSMT_DATE, -GSE_WSE, color = SWN)) + geom_line() + guides(color = FALSE)
+#ggplot(maoi, aes(date, gwe, color = SWN)) + geom_line() + guides(color = FALSE)
+#ggplot(maoi, aes(date, -dtw, color = SWN)) + geom_line() + guides(color = FALSE)
 
 # sanity check: mapview of wells
-#mapview::mapview(maoi, zcol = "WELL_DEPTH") + 
+#mapview::mapview(maoi, zcol = "well_depth") + 
 #  mapview::mapview(aoi, alpha.regions = 0, lwd = 2, color = "red")
 
 # ggplots of DBGS - IMPT TO SORT!!!
-sc <- unique(maoi$SITE_CODE) %>% sort() 
-ns <- group_by(maoi, SITE_CODE) %>% slice(1) %>% ungroup() %>% arrange(SITE_CODE) 
-ns$lab <- paste0("<p><b>state well num:</b> ", ns$SWN, "</p>",
-                 "<p><b>coords x:</b> ", as_tibble(st_coordinates(ns))$X, "</p>",
+sc <- unique(maoi$well_id) %>% sort() 
+ns <- group_by(maoi, well_id) %>% slice(1) %>% ungroup() %>% arrange(well_id) 
+ns$lab <- paste0("<p><b>coords x:</b> ", as_tibble(st_coordinates(ns))$X, "</p>",
                  "<p><b>coords y:</b> ", as_tibble(st_coordinates(ns))$Y, "</p>",
                  "<p><b>n samp:</b> ", ns$n_samples, "</p>",
                  "<p><b>t range:</b> ", ns$t_range, "</p>",
-                 "<p><b>depth (ft):</b> ", ns$WELL_DEPTH, "</p>",
-                 "<p><b>perf int (ft):</b> ", ns$TOP_PRF, " to ", ns$BOT_PRF, "</p>",
-                 "<p><b>use:</b> ", ns$WELL_USE, "</p>",
-                 "<p><b>type:</b> ", ns$WELL_TYPE, "</p>",
-                 "<p><b>agency:</b> ", ns$WLM_ORG_NAME, "</p>")
+                 "<p><b>depth (ft):</b> ", ns$well_depth, "</p>",
+                 "<p><b>pump depth (ft):</b> ", ns$pump_depth ,"</p>",
+                 "<p><b>agency:</b> ", 'DWG', "</p>")
 
 # ------------------------------------------------------------------------
 # add seasons
 maoi <- maoi %>% 
   mutate(
     season = case_when(
-      month(MSMT_DATE) %in% 8:11 ~ "fall",
-      month(MSMT_DATE) %in% 3:5  ~ "spring",
+      month(date) %in% 8:11 ~ "fall",
+      month(date) %in% 3:5  ~ "spring",
       TRUE ~ "other"
     )
   ) %>% 
   # add seasonal range
-  group_by(SITE_CODE, season) %>% 
-  mutate(fall_high   = ifelse(season == "fall",   min(GSE_WSE, na.rm = TRUE), NA),
-         fall_low    = ifelse(season == "fall",   max(GSE_WSE, na.rm = TRUE), NA),
-         spring_high = ifelse(season == "spring", min(GSE_WSE, na.rm = TRUE), NA),
-         spring_low  = ifelse(season == "spring", max(GSE_WSE, na.rm = TRUE), NA)) %>% 
+  group_by(well_id, season) %>% 
+  mutate(fall_high   = ifelse(season == "fall",   min(dtw, na.rm = TRUE), NA),
+         fall_low    = ifelse(season == "fall",   max(dtw, na.rm = TRUE), NA),
+         spring_high = ifelse(season == "spring", min(dtw, na.rm = TRUE), NA),
+         spring_low  = ifelse(season == "spring", max(dtw, na.rm = TRUE), NA)) %>% 
   ungroup() %>% 
-  mutate(water_year = calculate_water_year(MSMT_DATE)) %>% 
+  mutate(water_year = calculate_water_year(date)) %>% 
   left_join(wyt, by = c("water_year" = "WY")) %>% 
   mutate(water_year_type = 
            factor(water_year_type,
@@ -111,12 +101,12 @@ maoi <- maoi %>%
 p <- vector("list", length(sc))
 for(i in seq_along(p)){
   d <- maoi %>% 
-    filter(SITE_CODE == sc[i])
+    filter(well_id == sc[i])
   
   # closest to 2015-01-01 
   close_2015 <- 
-    tibble(MSMT_DATE = d[which.min(abs(d$MSMT_DATE - ymd_hms("2015-01-01 00:00:00"))), ]$MSMT_DATE,
-           close_Jan_2015 = d[which.min(abs(d$MSMT_DATE - ymd_hms("2015-01-01 00:00:00"))), ]$GSE_WSE)
+    tibble(date = d[which.min(abs(d$date - ymd_hms("2015-01-01 00:00:00"))), ]$date,
+           close_Jan_2015 = d[which.min(abs(d$date - ymd_hms("2015-01-01 00:00:00"))), ]$dtw)
   
   # water year range rectangles - join to WY type data
   wy_rng <- c(min(d$water_year_start, na.rm = TRUE), 
@@ -149,19 +139,19 @@ for(i in seq_along(p)){
               mapping = aes(
                 xmin  = t0, 
                 xmax  = t1, 
-                ymin  = min(-d$GSE_WSE, na.rm=TRUE), 
+                ymin  = min(-d$dtw, na.rm=TRUE), 
                 ymax  = 0,
                 fill  = water_year_type,
                 WY    = water_year), alpha = 0.5) +
-    geom_point(data = d, mapping = aes(MSMT_DATE, -GSE_WSE)) +
-    geom_line(data = d, mapping = aes(MSMT_DATE, -GSE_WSE)) +
+    geom_point(data = d, mapping = aes(date, -dtw)) +
+    geom_line(data = d, mapping = aes(date, -dtw)) +
     geom_hline(data = close_2015, mapping = aes(yintercept = -close_Jan_2015), lwd = 1, color = "grey50") +
     geom_hline(data = d, mapping = aes(yintercept = -spring_high), lwd = 1, linetype = "dotted", color = "blue") +
     geom_hline(data = d, mapping = aes(yintercept = -spring_low),  lwd = 1, linetype = "dotted", color = "cyan") +
     geom_hline(data = d, mapping = aes(yintercept = -fall_high),   lwd = 1, linetype = "dotted", color = "orange") +
     geom_hline(data = d, mapping = aes(yintercept = -fall_low),    lwd = 1, linetype = "dotted", color = "red") +
     scale_fill_brewer(palette = "RdYlBu", direction = -1, drop = FALSE) +
-    coord_cartesian(ylim = c(min(-d$GSE_WSE, na.rm=TRUE), 0)) +
+    coord_cartesian(ylim = c(min(-d$dtw, na.rm=TRUE), 0)) +
     labs(y = "DBGS (FT)", x = "Measurement date",
          fill = "Water Year\nType", title = sc[i])
   p[[i]] <- ggplotly(p[[i]]) %>% 
@@ -174,7 +164,7 @@ for(i in seq_along(p)){
 # ------------------------------------------------------------------------
 # leaflet
 pal <- colorNumeric(colormap::colormap(colormap::colormaps$viridis, nshades = 10), 
-                    domain = ns$WELL_DEPTH)
+                    domain = ns$well_depth)
 
 l <- leaflet() %>% 
   addProviderTiles(providers$CartoDB.Positron, group = "Light") %>% 
@@ -185,13 +175,13 @@ l <- l %>%
               fillOpacity = 0, 
               color = "red") %>% 
   addCircleMarkers(data = st_transform(ns, 4326), 
-                   color = ~pal(ns$WELL_DEPTH), 
+                   color = ~pal(ns$well_depth), 
                    stroke = FALSE,
                    radius = 4, 
                    fillOpacity = .8,
                    popup = p,
                    label = lapply(ns$lab, htmltools::HTML)) %>% 
-  addLegend(pal = pal, values = ns$WELL_DEPTH,
+  addLegend(pal = pal, values = ns$well_depth,
             title    = "Well depth (ft)",
             position = "bottomright") %>% 
   addLayersControl(
@@ -216,12 +206,12 @@ l <- l %>%
 dt <- ns %>% 
   as("Spatial") %>% 
   .@data %>% 
-  select(SITE_CODE, SWN, WLM_ORG_NAME, TOP_PRF:n_samples) #%>% 
-  # write_rds(here("out", "dt.rds"))
+  select(well_id, WLM_ORG_NAME, TOP_PRF:n_samples) #%>% 
+# write_rds(here("out", "dt.rds"))
 
 # zip data
 # subset to the site codes
-n <- unique(maoi$SITE_CODE)
+n <- unique(maoi$well_id)
 
 # ------------------------------------------------------------------------
 # write csvs - first arrange data and add geometry
@@ -231,7 +221,7 @@ df <- as(maoi, "Spatial")@data %>%
 
 for(i in 1:length(n)){
   df %>% 
-    filter(SITE_CODE == n[i]) %>% 
+    filter(well_id == n[i]) %>% 
     write_csv(paste0(data_dir, aoi_out_path, "/", n[i], ".csv"))
 }
 
