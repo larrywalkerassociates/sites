@@ -1,5 +1,5 @@
 # AOI determination
-aoi_out_path <- "sasb_gwl"
+# aoi_out_path <- "sasb_gwl"
 # aoi_out_path <- "ukiah_gwl"
 # aoi_out_path <- "shasta_gwl"
 
@@ -34,6 +34,9 @@ buttons_to_remove <-
 identical(proj4string(aoi), proj4string(m))
 maoi <- m[aoi, ] %>% st_as_sf()
 
+# remove samples with NA values
+maoi <- maoi %>% filter(!is.na(dtw))
+
 # add observation count and time range. site code has no NA vals
 maoi <- maoi %>% 
   group_by(well_id) %>% 
@@ -64,8 +67,8 @@ sc <- unique(maoi$well_id) %>% sort()
 ns <- group_by(maoi, well_id) %>% slice(1) %>% ungroup() %>% arrange(well_id) 
 ns$lab <- paste0("<p><b>coords x:</b> ", as_tibble(st_coordinates(ns))$X, "</p>",
                  "<p><b>coords y:</b> ", as_tibble(st_coordinates(ns))$Y, "</p>",
-                 "<p><b>n samp:</b> ", ns$n_samples, "</p>",
-                 "<p><b>t range:</b> ", ns$t_range, "</p>",
+                 "<p><b>Date range:</b> ", ns$t_range, "</p>",
+                 "<p><b>Well head elevation (ft):</b> ", ns$well_head_elevation, "</p>",
                  "<p><b>depth (ft):</b> ", ns$well_depth, "</p>",
                  "<p><b>pump depth (ft):</b> ", ns$pump_depth ,"</p>",
                  "<p><b>agency:</b> ", 'DWG', "</p>")
@@ -104,9 +107,9 @@ for(i in seq_along(p)){
     filter(well_id == sc[i])
   
   # closest to 2015-01-01 
-  close_2015 <- 
-    tibble(date = d[which.min(abs(d$date - ymd_hms("2015-01-01 00:00:00"))), ]$date,
-           close_Jan_2015 = d[which.min(abs(d$date - ymd_hms("2015-01-01 00:00:00"))), ]$dtw)
+  # close_2015 <- 
+  #   tibble(date = d[which.min(abs(d$date - ymd_hms("2015-01-01 00:00:00"))), ]$date,
+  #          close_Jan_2015 = d[which.min(abs(d$date - ymd_hms("2015-01-01 00:00:00"))), ]$dtw)
   
   # water year range rectangles - join to WY type data
   wy_rng <- c(min(d$water_year_start, na.rm = TRUE), 
@@ -132,7 +135,8 @@ for(i in seq_along(p)){
     }
     wy_rect[new_row_i,]$water_year_type <- dummy_vals[diff]
   }
-  
+  # remove NA values since dealing with just 1 year
+  wy_rect <- wy_rect %>% filter(!is.na(water_year))
   # build ggplots and plotly objects
   p[[i]] <- ggplot() +
     geom_rect(data = wy_rect, 
@@ -145,7 +149,7 @@ for(i in seq_along(p)){
                 WY    = water_year), alpha = 0.5) +
     geom_point(data = d, mapping = aes(date, -dtw)) +
     geom_line(data = d, mapping = aes(date, -dtw)) +
-    geom_hline(data = close_2015, mapping = aes(yintercept = -close_Jan_2015), lwd = 1, color = "grey50") +
+    # geom_hline(data = close_2015, mapping = aes(yintercept = -close_Jan_2015), lwd = 1, color = "grey50") +
     geom_hline(data = d, mapping = aes(yintercept = -spring_high), lwd = 1, linetype = "dotted", color = "blue") +
     geom_hline(data = d, mapping = aes(yintercept = -spring_low),  lwd = 1, linetype = "dotted", color = "cyan") +
     geom_hline(data = d, mapping = aes(yintercept = -fall_high),   lwd = 1, linetype = "dotted", color = "orange") +
@@ -164,7 +168,7 @@ for(i in seq_along(p)){
 # ------------------------------------------------------------------------
 # leaflet
 pal <- colorNumeric(colormap::colormap(colormap::colormaps$viridis, nshades = 10), 
-                    domain = ns$well_depth)
+                    domain = ns$dtw)
 
 l <- leaflet() %>% 
   addProviderTiles(providers$CartoDB.Positron, group = "Light") %>% 
@@ -175,14 +179,14 @@ l <- l %>%
               fillOpacity = 0, 
               color = "red") %>% 
   addCircleMarkers(data = st_transform(ns, 4326), 
-                   color = ~pal(ns$well_depth), 
+                   color = ~pal(ns$dtw), 
                    stroke = FALSE,
-                   radius = 4, 
+                   radius = 4, # original is 4, zooms in with depth
                    fillOpacity = .8,
                    popup = p,
                    label = lapply(ns$lab, htmltools::HTML)) %>% 
-  addLegend(pal = pal, values = ns$well_depth,
-            title    = "Well depth (ft)",
+  addLegend(pal = pal, values = ns$dtw,
+            title    = "Depth to water (ft)",
             position = "bottomright") %>% 
   addLayersControl(
     baseGroups    = c("Light", "World"),
@@ -206,7 +210,7 @@ l <- l %>%
 dt <- ns %>% 
   as("Spatial") %>% 
   .@data %>% 
-  select(well_id, WLM_ORG_NAME, TOP_PRF:n_samples) #%>% 
+  select(well_id,  well_depth:n_samples) #%>% 
 # write_rds(here("out", "dt.rds"))
 
 # zip data
@@ -216,19 +220,18 @@ n <- unique(maoi$well_id)
 # ------------------------------------------------------------------------
 # write csvs - first arrange data and add geometry
 df <- as(maoi, "Spatial")@data %>% 
-  select(-c("STN_ID.x", "STN_ID.y")) %>% 
   bind_cols(as_tibble(st_coordinates(maoi)))
 
 for(i in 1:length(n)){
   df %>% 
     filter(well_id == n[i]) %>% 
-    write_csv(paste0(data_dir, aoi_out_path, "/", n[i], ".csv"))
+    write_csv(paste0(aoi_out_path, "/", n[i], ".csv"))
 }
 
 write_csv(df, 
-          paste0(data_dir, aoi_out_path, "/all_gwl_data.csv"))
+          paste0(aoi_out_path, "/all_gwl_data.csv"))
 
-zip_dir    <- paste0(data_dir, aoi_out_path, "/", aoi_out_path,"_data.zip")
-file_paths <- list.files(paste0(data_dir, aoi_out_path),  full.names = TRUE)
-zip(zip_dir, file_paths, extras = "-j")
+zip_dir    <- paste0(aoi_out_path, "/", basename(aoi_out_path),"_data.zip")
+file_paths <- list.files(paste0(aoi_out_path),  full.names = TRUE)
+zip(zip_dir, file_paths, extras = "-j") # doesn't work right now
 file.remove(file_paths)
